@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>山河志 · 知识网络</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --ink-light: #3d3d3d;
+      --ink-faint: #8a8a8a;
+      --paper: #f5f0e8;
+      --vermilion: #b8302a;
+      --gold: #a07808;
+      --jade: #2d6a4f;
+      --mist: rgba(26,26,26,0.05);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 导航 */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 56px;
+      background: rgba(245,240,232,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(26,26,26,0.07);
+    }
+
+    .nav-brand h1 {
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 1.5rem;
+      color: var(--vermilion);
+    }
+
+    .nav-brand .tag {
+      font-size: 0.6rem;
+      color: var(--ink-faint);
+      margin-left: 10px;
+      letter-spacing: 0.2em;
+    }
+
+    .nav-btn {
+      padding: 6px 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(26,26,26,0.12);
+      background: transparent;
+      font-size: 0.75rem;
+      color: var(--ink-light);
+      cursor: pointer;
+    }
+
+    .nav-btn:hover { border-color: var(--vermilion); color: var(--vermilion); }
+    .nav-btn.primary { background: var(--vermilion); color: #fff; border-color: var(--vermilion); }
+
+    /* 布局 */
+    .layout {
+      display: grid;
+      grid-template-columns: 200px 1fr 260px;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* 左侧边栏 */
+    .sidebar-left {
+      border-right: 1px solid rgba(26,26,26,0.07);
+      padding: 20px 14px;
+      overflow-y: auto;
+      max-height: calc(100vh - 56px);
+    }
+
+    .sidebar-title {
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(26,26,26,0.05);
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .cat-btn {
+      width: 100%;
+      text-align: left;
+      padding: 7px 10px;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      font-size: 0.78rem;
+      color: var(--ink-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 2px;
+    }
+
+    .cat-btn:hover { background: var(--mist); }
+    .cat-btn.active { background: rgba(184,48,42,0.08); color: var(--vermilion); font-weight: 500; }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+
+    .qstat {
+      background: white;
+      border-radius: 5px;
+      padding: 7px 5px;
+      text-align: center;
+      border: 1px solid rgba(26,26,26,0.06);
+    }
+
+    .qstat-num { font-family: 'ZCOOL XiaoWei', serif; font-size: 1.2rem; color: var(--vermilion); }
+    .qstat-label { font-size: 0.55rem; color: var(--ink-faint); margin-top: 1px; }
+
+    /* 主内容 */
+    .main {
+      padding: 24px 32px;
+      overflow-y: auto;
+    }
+
+    .header { margin-bottom: 16px; }
+
+    .eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .header h2 {
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 1.8rem;
+      color: var(--ink);
+    }
+
+    /* 坐标系网格 */
+    .coord-system {
+      display: flex;
+      gap: 0;
+    }
+
+    /* Y轴（纵坐标）- Layer 标签 */
+    .y-axis {
+      width: 65px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .y-label {
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      border-right: 2px solid var(--vermilion);
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.7rem;
+      color: var(--ink-faint);
+      text-align: right;
+    }
+
+    .y-label.l1 { color: var(--vermilion); font-weight: 600; }
+    .y-label.l2 { color: var(--gold); }
+    .y-label.l3 { color: var(--ink-light); }
+    .y-label.l4 { color: var(--ink-faint); }
+
+    /* 网格区域 */
+    .grid-area {
+      flex: 1;
+      overflow-x: auto;
+    }
+
+    .grid-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-row {
+      display: flex;
+      height: 100px;
+      border-bottom: 1px solid rgba(26,26,26,0.06);
+    }
+
+    .grid-row:last-child { border-bottom: none; }
+
+    .grid-cell {
+      position: relative;
+      flex: 1;
+      min-width: 120px;
+      padding: 8px;
+      background: white;
+      border-left: 1px solid rgba(26,26,26,0.06);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .grid-cell:first-child { border-left: none; }
+    .grid-cell:hover { background: rgba(245,240,232,0.4); }
+
+    /* X轴（横坐标）- 在底部 */
+    .x-axis {
+      display: flex;
+      border-top: 2px solid var(--jade);
+    }
+
+    .x-label-wrap {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 8px;
+      border-left: 1px solid rgba(26,26,26,0.06);
+      text-align: center;
+      background: white;
+    }
+
+    .x-label-wrap:first-child { border-left: none; }
+
+    .x-label {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.78rem;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .x-label-def {
+      font-size: 0.58rem;
+      color: var(--ink-faint);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    /* 格子内容 */
+    .cell-items {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* 聚合条目 */
+    .item-group {
+      background: var(--paper);
+      border: 1px solid rgba(26,26,26,0.08);
+      border-radius: 4px;
+      padding: 5px 8px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .item-group:hover {
+      border-color: var(--vermilion);
+      background: rgba(184,48,42,0.04);
+    }
+
+    .group-head {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .group-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-l1 { background: var(--vermilion); }
+    .dot-l2 { background: var(--gold); }
+    .dot-l3 { background: var(--jade); }
+    .dot-l4 { background: #aaa; }
+
+    .group-name {
+      font-size: 0.74rem;
+      color: var(--ink);
+      flex: 1;
+    }
+
+    .group-count {
+      font-size: 0.62rem;
+      color: var(--ink-faint);
+      background: rgba(26,26,26,0.05);
+      padding: 1px 5px;
+      border-radius: 8px;
+    }
+
+    .group-arrow {
+      font-size: 0.6rem;
+      color: var(--ink-faint);
+      transition: transform 0.15s;
+    }
+
+    .item-group.open .group-arrow { transform: rotate(90deg); }
+
+    .group-items {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      margin-top: 4px;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid rgba(26,26,26,0.1);
+      border-radius: 5px;
+      box-shadow: 0 4px 16px rgba(26,26,26,0.12);
+      z-index: 50;
+      min-width: 160px;
+    }
+
+    .item-group.open .group-items { display: block; }
+
+    .sub-item {
+      padding: 3px 0;
+      font-size: 0.72rem;
+      color: var(--ink-light);
+      cursor: pointer;
+    }
+
+    .sub-item:hover { color: var(--vermilion); }
+
+    .empty-cell {
+      color: rgba(26,26,26,0.15);
+      font-size: 0.7rem;
+      font-family: 'Noto Serif SC', serif;
+      padding: 10px;
+      text-align: center;
+    }
+
+    /* 图例 */
+    .legend {
+      display: flex;
+      gap: 18px;
+      margin-top: 14px;
+      padding: 8px 14px;
+      background: rgba(245,240,232,0.6);
+      border-radius: 5px;
+      font-size: 0.7rem;
+      color: var(--ink-light);
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+
+    /* 右侧信息源 */
+    .sidebar-right {
+      border-left: 1px solid rgba(26,26,26,0.07);
+      padding: 20px 14px;
+      overflow-y: auto;
+      max-height: calc(100vh - 56px);
+    }
+
+    .src-item {
+      padding: 8px 10px;
+      background: white;
+      border-radius: 5px;
+      border: 1px solid rgba(26,26,26,0.06);
+      margin-bottom: 6px;
+    }
+
+    .src-name { font-size: 0.76rem; font-weight: 500; }
+    .src-desc { font-size: 0.62rem; color: var(--ink-faint); margin-top: 2px; }
+
+    .src-weight { display: flex; gap: 2px; margin-top: 5px; }
+    .w-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(26,26,26,0.1); }
+    .w-dot.on { background: var(--vermilion); }
+
+    /* 详情面板 */
+    .detail-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 640px;
+      max-height: 85vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid rgba(26,26,26,0.1);
+      box-shadow: 0 8px 36px rgba(26,26,26,0.18);
+      padding: 18px;
+      display: none;
+      z-index: 200;
+    }
+
+    .detail-panel.show { display: block; }
+
+    .detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 1.5rem;
+      color: var(--ink);
+    }
+
+    .detail-close {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: var(--ink-faint);
+      cursor: pointer;
+    }
+
+    .detail-image-wrap {
+      width: 100%;
+      margin-bottom: 14px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .detail-image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .detail-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .meta-box {
+      padding: 8px;
+      background: var(--paper);
+      border-radius: 5px;
+    }
+
+    .meta-lbl { font-size: 0.6rem; color: var(--ink-faint); letter-spacing: 0.08em; }
+    .meta-val { font-size: 0.8rem; font-weight: 500; margin-top: 2px; }
+
+    .detail-quote {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--vermilion);
+      text-align: center;
+      padding: 12px 16px;
+      background: rgba(184,48,42,0.04);
+      border-radius: 6px;
+      margin-bottom: 14px;
+      border-left: 3px solid var(--vermilion);
+    }
+
+    .detail-section { margin-bottom: 14px; }
+
+    .detail-section-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(26,26,26,0.06);
+    }
+
+    .detail-content {
+      font-size: 0.84rem;
+      line-height: 1.75;
+      color: var(--ink-light);
+    }
+
+    .story-item {
+      padding: 10px 12px;
+      background: var(--paper);
+      border-radius: 5px;
+      margin-bottom: 8px;
+    }
+
+    .story-item:last-child { margin-bottom: 0; }
+
+    .story-title { font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; }
+    .story-content { font-size: 0.76rem; line-height: 1.7; color: var(--ink-light); }
+
+    .detail-src {
+      font-size: 0.7rem;
+      color: var(--ink-faint);
+      padding-top: 10px;
+      border-top: 1px solid rgba(26,26,26,0.06);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      opacity: 0;
+      transition: all 0.2s;
+      z-index: 300;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 响应式 */
+    @media (max-width: 1000px) {
+      .layout { grid-template-columns: 170px 1fr; }
+      .sidebar-right { display: none; }
+    }
+
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar-left { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <h1>山河志</h1>
+    <span class="tag">知识网络 v0.1</span>
+  </div>
+  <button class="nav-btn primary" onclick="showToast('添加条目功能开发中')">+ 添加条目</button>
+</nav>
+
+<div class="layout">
+
+  <!-- 左侧导航 -->
+  <aside class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-title">横坐标 · 大类</div>
+      <button class="cat-btn active" onclick="selectCategory('古建筑', this)"><span>🏛</span>古建筑</button>
+      <button class="cat-btn" onclick="selectCategory('现代建筑', this)"><span>🌆</span>现代建筑</button>
+      <button class="cat-btn" onclick="selectCategory('风景', this)"><span>🏔</span>风景</button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">统计</div>
+      <div class="quick-stats">
+        <div class="qstat"><div class="qstat-num" id="stat-items">0</div><div class="qstat-label">条目</div></div>
+        <div class="qstat"><div class="qstat-num">8</div><div class="qstat-label">来源</div></div>
+        <div class="qstat"><div class="qstat-num">4</div><div class="qstat-label">层级</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">说明</div>
+      <div style="font-size:0.68rem;color:var(--ink-faint);line-height:1.55;">
+        纵坐标：权威层级（Layer 1-4）<br>
+        横坐标：建筑类别<br>
+        点击条目查看详情
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容 -->
+  <main class="main">
+    <div class="header">
+      <div class="eyebrow">古建筑</div>
+      <h2 id="main-title">中国古建筑知识网络</h2>
+    </div>
+
+    <!-- 坐标系 -->
+    <div class="coord-system">
+      <!-- Y轴 -->
+      <div class="y-axis" id="y-axis"></div>
+      
+      <!-- 网格区域 -->
+      <div class="grid-area">
+        <div class="grid-body" id="grid-body"></div>
+        <div class="x-axis" id="x-axis"></div>
+      </div>
+    </div>
+
+    <!-- 图例 -->
+    <div class="legend">
+      <div class="legend-item"><span class="group-dot dot-l1"></span>Layer 1 国家级权威</div>
+      <div class="legend-item"><span class="group-dot dot-l2"></span>Layer 2 行业公认</div>
+      <div class="legend-item"><span class="group-dot dot-l3"></span>Layer 3 地方民间</div>
+      <div class="legend-item"><span class="group-dot dot-l4"></span>Layer 4 待验证</div>
+    </div>
+  </main>
+
+  <!-- 右侧信息源 -->
+  <aside class="sidebar-right">
+    <div class="sidebar-section">
+      <div class="sidebar-title">信息来源</div>
+      <div class="src-item">
+        <div class="src-name">中国知网</div>
+        <div class="src-desc">学术文献 · 最高权重</div>
+        <div class="src-weight"><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span></div>
+      </div>
+      <div class="src-item">
+        <div class="src-name">百度百科</div>
+        <div class="src-desc">公开百科 · 需交叉验证</div>
+        <div class="src-weight"><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot"></span></div>
+      </div>
+      <div class="src-item">
+        <div class="src-name">国家文物局</div>
+        <div class="src-desc">官方数据</div>
+        <div class="src-weight"><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span></div>
+      </div>
+      <div class="src-item">
+        <div class="src-name">专业书籍</div>
+        <div class="src-desc">建筑史专著</div>
+        <div class="src-weight"><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span><span class="w-dot on"></span></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- 详情面板 -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-head">
+    <div class="detail-title" id="d-title">滕王阁</div>
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+  </div>
+  
+  <div class="detail-image-wrap" id="d-image-wrap">
+    <img class="detail-image" id="d-image" src="" alt="">
+  </div>
+  
+  <div class="detail-meta">
+    <div class="meta-box"><div class="meta-lbl">所在省市</div><div class="meta-val" id="d-province">江西</div></div>
+    <div class="meta-box"><div class="meta-lbl">城市</div><div class="meta-val" id="d-city">南昌</div></div>
+    <div class="meta-box"><div class="meta-lbl">始建年代</div><div class="meta-val" id="d-year">唐</div></div>
+    <div class="meta-box"><div class="meta-lbl">权威层级</div><div class="meta-val" id="d-layer">Layer 1</div></div>
+  </div>
+  
+  <div class="detail-quote" id="d-desc">名句内容</div>
+  
+  <div class="detail-section">
+    <div class="detail-section-title">详细介绍</div>
+    <div class="detail-content" id="d-detail">详细内容...</div>
+  </div>
+  
+  <div class="detail-section" id="d-stories-section">
+    <div class="detail-section-title">历史典故</div>
+    <div id="d-stories"></div>
+  </div>
+  
+  <div class="detail-src">信息来源：<span id="d-src">知网</span></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================
+// 数据定义
+// =============================================
+
+// 纵坐标层级（从下往上：Layer 1 → Layer 4）
+var layers = [
+  { level: 4, name: 'Layer 4', desc: '待验证' },
+  { level: 3, name: 'Layer 3', desc: '地方/民间' },
+  { level: 2, name: 'Layer 2', desc: '行业公认' },
+  { level: 1, name: 'Layer 1', desc: '国家级权威' },
+];
+
+// 横坐标类别
+var categories = {
+  '古建筑': [
+    { name: '楼阁', def: '二层以上建筑' },
+    { name: '佛寺', def: '佛教修行场所' },
+    { name: '道观', def: '道教宫观' },
+    { name: '塔', def: '佛塔/经幢' },
+    { name: '宫殿', def: '皇家建筑' },
+    { name: '园林建筑', def: '亭台轩榭廊舫' },
+    { name: '城墙关隘', def: '军事防御' },
+    { name: '陵墓祠庙', def: '祭祀建筑' },
+  ],
+  '现代建筑': [
+    { name: '城市地标', def: '摩天楼/标志性建筑' },
+    { name: '公园广场', def: '城市公共空间' },
+    { name: '现代桥梁', def: '大型桥梁' },
+    { name: '体育场馆', def: '体育场/体育馆' },
+  ],
+  '风景': [
+    { name: '名山', def: '著名山峰' },
+    { name: '大湖', def: '著名湖泊' },
+    { name: '江河', def: '著名河流' },
+    { name: '特殊地貌', def: '丹霞/喀斯特等' },
+  ]
+};
+
+// 所有条目
+var items = [
+  { 
+    layer: 1, cat: '古建筑', sub: '楼阁', name: '滕王阁', 
+    province: '江西', city: '南昌', year: '唐·永徽四年(653)', 
+    desc: '落霞与孤鹜齐飞，秋水共长天一色。',
+    detail: '滕王阁位于江西省南昌市东湖区赣江东岸，江南三大名楼之一。唐永徽四年(653年)，唐太宗之弟滕王李元婴任洪州都督时所建。',
+    image: 'https://q3.itc.cn/q_70/images03/20250413/277d6b0c5cfe4bb09b8093105051c6b6.jpeg',
+    stories: [
+      { title: '王勃作序', content: '上元二年(675年)重阳节，王勃一气呵成写下千古名篇《滕王阁序》，令满座皆惊。' }
+    ],
+    src: '知网、百度百科',
+    group: '四大名楼'
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '楼阁', name: '黄鹤楼', 
+    province: '湖北', city: '武汉', year: '三国·始建于223年', 
+    desc: '昔人已乘黄鹤去，此地空余黄鹤楼。',
+    detail: '黄鹤楼位于湖北省武汉市武昌蛇山之巅，濒临万里长江，为"江南三大名楼"之一。',
+    image: 'https://img1.baidu.com/it/u=2723896580,2104654052&fm=253&fmt=auto&app=138&f=JPEG',
+    stories: [
+      { title: '崔颢题诗', content: '唐代诗人崔颢登黄鹤楼题诗，李白见后叹道"眼前有景道不得，崔颢题诗在上头"。' }
+    ],
+    src: '知网、百度百科',
+    group: '四大名楼'
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '楼阁', name: '岳阳楼', 
+    province: '湖南', city: '岳阳', year: '东汉·始建', 
+    desc: '先天下之忧而忧，后天下之乐而乐。',
+    detail: '岳阳楼位于湖南省岳阳市古城西门城墙上，紧靠洞庭湖畔，江南三大名楼之一。',
+    image: 'https://img0.baidu.com/it/u=3695680232,3161304668&fm=253&fmt=auto&app=138&f=JPEG',
+    stories: [
+      { title: '范仲淹作记', content: '范仲淹写下千古名篇《岳阳楼记》，"先天下之忧而忧，后天下之乐而乐"成为千古名句。' }
+    ],
+    src: '知网、百度百科',
+    group: '四大名楼'
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '楼阁', name: '鹳雀楼', 
+    province: '山西', city: '永济', year: '北周(557-581)', 
+    desc: '白日依山尽，黄河入海流。',
+    detail: '鹳雀楼位于山西省永济市蒲州古城西面的黄河东岸，始建于北周。',
+    image: 'https://img2.baidu.com/it/u=4069894438,313824276&fm=253&fmt=auto&app=138&f=JPEG',
+    stories: [
+      { title: '王之涣登楼', content: '王之涣写下《登鹳雀楼》，仅二十字却气象万千，成为千古绝唱。' }
+    ],
+    src: '知网、维基百科',
+    group: '四大名楼'
+  },
+  { 
+    layer: 2, cat: '古建筑', sub: '楼阁', name: '蓬莱阁', 
+    province: '山东', city: '蓬莱', year: '宋·嘉佑六年(1061)', 
+    desc: '海市蜃楼胜境。',
+    detail: '蓬莱阁位于山东省蓬莱市丹崖山上，以海市蜃楼奇观闻名。',
+    src: '百度百科、知网',
+    group: null
+  },
+  { 
+    layer: 2, cat: '古建筑', sub: '楼阁', name: '阅江楼', 
+    province: '江苏', city: '南京', year: '明·洪武七年(1374)', 
+    desc: '宋濂《阅江楼记》。',
+    detail: '阅江楼位于南京狮子山顶，600余年有记无楼，2001年重建。',
+    src: '百度百科',
+    group: '江南名楼'
+  },
+  { 
+    layer: 3, cat: '古建筑', sub: '楼阁', name: '甲秀楼', 
+    province: '贵州', city: '贵阳', year: '明·万历二十六年(1598)', 
+    desc: '贵阳城南标志性古建筑。',
+    detail: '甲秀楼位于贵阳市南明河上，是贵阳的标志性建筑。',
+    src: '百度百科',
+    group: null
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '佛寺', name: '少林寺', 
+    province: '河南', city: '登封', year: '北魏·太和十九年(495)', 
+    desc: '禅宗祖庭，少林武术发源地。',
+    detail: '少林寺位于河南省登封市嵩山，是中国佛教禅宗祖庭，少林武术发源地。',
+    src: '知网、百度百科',
+    group: null
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '佛寺', name: '白马寺', 
+    province: '河南', city: '洛阳', year: '东汉·永平十一年(68)', 
+    desc: '中国第一古刹。',
+    detail: '白马寺位于河南省洛阳市，是佛教传入中国后兴建的第一座寺院。',
+    src: '知网、百度百科',
+    group: null
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '道观', name: '白云观', 
+    province: '北京', city: '北京', year: '唐·开元二十七年(739)', 
+    desc: '道教全真龙门派祖庭。',
+    detail: '白云观位于北京市西城区，是道教全真龙门派祖庭。',
+    src: '知网、百度百科',
+    group: null
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '塔', name: '大雁塔', 
+    province: '陕西', city: '西安', year: '唐·永徽三年(652)', 
+    desc: '玄奘为保存经卷而建。',
+    detail: '大雁塔位于陕西省西安市大慈恩寺内，是玄奘为保存经卷而建。',
+    src: '知网、百度百科',
+    group: null
+  },
+  { 
+    layer: 1, cat: '古建筑', sub: '宫殿', name: '故宫', 
+    province: '北京', city: '北京', year: '明·永乐四年(1406)', 
+    desc: '明清两代皇宫。',
+    detail: '故宫位于北京市中心，是明清两代皇宫，世界最大宫殿建筑群。',
+    src: '知网、百度百科',
+    group: null
+  },
+  { 
+    layer: 1, cat: '风景', sub: '名山', name: '泰山', 
+    province: '山东', city: '泰安', year: '—', 
+    desc: '五岳之首，天下第一山。',
+    detail: '泰山位于山东省泰安市，是五岳之首。',
+    src: '知网、百度百科',
+    group: '五岳'
+  },
+  { 
+    layer: 1, cat: '风景', sub: '名山', name: '华山', 
+    province: '陕西', city: '华阴', year: '—', 
+    desc: '西岳，奇险天下第一山。',
+    detail: '华山位于陕西省华阴市，是西岳。',
+    src: '百度百科',
+    group: '五岳'
+  },
+  { 
+    layer: 1, cat: '风景', sub: '名山', name: '衡山', 
+    province: '湖南', city: '衡阳', year: '—', 
+    desc: '南岳，寿岳。',
+    detail: '衡山位于湖南省衡阳市，是南岳。',
+    src: '百度百科',
+    group: '五岳'
+  },
+  { 
+    layer: 1, cat: '风景', sub: '名山', name: '嵩山', 
+    province: '河南', city: '登封', year: '—', 
+    desc: '中岳。',
+    detail: '嵩山位于河南省登封市，是中岳。',
+    src: '百度百科',
+    group: '五岳'
+  },
+  { 
+    layer: 1, cat: '风景', sub: '名山', name: '恒山', 
+    province: '山西', city: '浑源', year: '—', 
+    desc: '北岳。',
+    detail: '恒山位于山西省浑源县，是北岳。',
+    src: '百度百科',
+    group: '五岳'
+  },
+];
+
+var currentCat = '古建筑';
+
+// =============================================
+// 渲染函数
+// =============================================
+
+function render() {
+  renderYAxis();
+  renderGrid();
+  renderXAxis();
+  updateStats();
+}
+
+function renderYAxis() {
+  var el = document.getElementById('y-axis');
+  var html = '';
+  // 从上到下：Layer 4 → Layer 1
+  layers.forEach(function(l) {
+    html += '<div class="y-label l' + l.level + '">' + l.name + '<br><span style="font-size:0.55rem;opacity:0.7">' + l.desc + '</span></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderXAxis() {
+  var el = document.getElementById('x-axis');
+  var subs = categories[currentCat] || [];
+  var html = '';
+  subs.forEach(function(s) {
+    html += '<div class="x-label-wrap"><div class="x-label">' + s.name + '</div><div class="x-label-def">' + s.def + '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderGrid() {
+  var el = document.getElementById('grid-body');
+  var subs = categories[currentCat] || [];
+  var html = '';
+  
+  // 从上到下渲染：Layer 4 → Layer 1
+  layers.forEach(function(layer) {
+    html += '<div class="grid-row">';
+    
+    subs.forEach(function(sub) {
+      var cellItems = items.filter(function(it) {
+        return it.cat === currentCat && it.sub === sub.name && it.layer === layer.level;
+      });
+      
+      html += '<div class="grid-cell">';
+      if (cellItems.length === 0) {
+        html += '<div class="empty-cell">—</div>';
+      } else {
+        html += '<div class="cell-items">';
+        
+        // 按 group 分组
+        var groups = {};
+        cellItems.forEach(function(it) {
+          var g = it.group || '__single__';
+          if (!groups[g]) groups[g] = [];
+          groups[g].push(it);
+        });
+        
+        // 渲染分组
+        Object.keys(groups).forEach(function(g) {
+          var gItems = groups[g];
+          if (g === '__single__') {
+            gItems.forEach(function(it) {
+              html += '<div class="item-group" data-idx="' + items.indexOf(it) + '">' +
+                '<div class="group-head">' +
+                  '<span class="group-dot dot-l' + it.layer + '"></span>' +
+                  '<span class="group-name">' + it.name + '</span>' +
+                '</div>' +
+              '</div>';
+            });
+          } else {
+            var firstItem = gItems[0];
+            html += '<div class="item-group" onclick="toggleGroup(this)">' +
+              '<div class="group-head">' +
+                '<span class="group-dot dot-l' + firstItem.layer + '"></span>' +
+                '<span class="group-name">' + g + '</span>' +
+                '<span class="group-count">' + gItems.length + '</span>' +
+                '<span class="group-arrow">▶</span>' +
+              '</div>' +
+              '<div class="group-items">';
+            gItems.forEach(function(it) {
+              html += '<div class="sub-item" data-idx="' + items.indexOf(it) + '">' + it.name + ' · ' + it.province + it.city + '</div>';
+            });
+            html += '</div></div>';
+          }
+        });
+        
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    
+    html += '</div>';
+  });
+  
+  el.innerHTML = html;
+  
+  // 绑定点击事件
+  document.querySelectorAll('.item-group[data-idx], .sub-item[data-idx]').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      if (this.classList.contains('item-group') && this.hasAttribute('onclick')) {
+        return; // 聚合条目，不触发详情
+      }
+      e.stopPropagation();
+      var idx = parseInt(this.getAttribute('data-idx'));
+      showDetail(items[idx]);
+    });
+  });
+}
+
+function toggleGroup(el) {
+  // 如果已经打开，则关闭
+  if (el.classList.contains('open')) {
+    el.classList.remove('open');
+    return;
+  }
+  
+  // 关闭所有其他打开的组
+  document.querySelectorAll('.item-group.open').forEach(function(g) {
+    g.classList.remove('open');
+  });
+  
+  // 打开当前组
+  el.classList.add('open');
+}
+
+// 点击页面其他地方关闭所有下拉
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.item-group')) {
+    document.querySelectorAll('.item-group.open').forEach(function(g) {
+      g.classList.remove('open');
+    });
+  }
+});
+
+function showDetail(item) {
+  document.getElementById('d-title').textContent = item.name;
+  document.getElementById('d-province').textContent = item.province || '待补充';
+  document.getElementById('d-city').textContent = item.city || '待补充';
+  document.getElementById('d-year').textContent = item.year;
+  document.getElementById('d-layer').textContent = 'Layer ' + item.layer;
+  document.getElementById('d-desc').textContent = item.desc;
+  document.getElementById('d-detail').textContent = item.detail || item.desc;
+  document.getElementById('d-src').textContent = item.src;
+  
+  // 图片
+  var imgWrap = document.getElementById('d-image-wrap');
+  var imgEl = document.getElementById('d-image');
+  if (item.image) {
+    imgEl.src = item.image;
+    imgWrap.style.display = 'block';
+  } else {
+    imgWrap.style.display = 'none';
+  }
+  
+  // 历史典故
+  var storiesSection = document.getElementById('d-stories-section');
+  var storiesEl = document.getElementById('d-stories');
+  
+  if (item.stories && item.stories.length > 0) {
+    storiesSection.style.display = 'block';
+    var storiesHtml = '';
+    item.stories.forEach(function(s) {
+      storiesHtml += '<div class="story-item">' +
+        '<div class="story-title">' + s.title + '</div>' +
+        '<div class="story-content">' + s.content + '</div>' +
+      '</div>';
+    });
+    storiesEl.innerHTML = storiesHtml;
+  } else {
+    storiesSection.style.display = 'none';
+  }
+  
+  document.getElementById('detailPanel').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('show');
+}
+
+function selectCategory(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelector('.eyebrow').textContent = cat;
+  document.getElementById('main-title').textContent = '中国' + cat + '知识网络';
+  closeDetail();
+  render();
+}
+
+function updateStats() {
+  var count = items.filter(function(it) { return it.cat === currentCat; }).length;
+  document.getElementById('stat-items').textContent = count;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+// 启动
+render();
+</script>
+</body>
+</html>
